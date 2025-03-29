@@ -252,7 +252,7 @@ def night_time_func(stn_df,srt_date, end_date,srt_time, end_time,plot=True):
     return out_df,disp_df
 
 
-def get_temp_count(in_df,obs_per_hour,temp):
+def get_temp_count(in_df,obs_per_hour,temp, plot=True):
     """
     Returns filtered Weather Station Dataframe for temperatures above a threshold
     print out the number of hours above the threshold per year chart
@@ -270,7 +270,9 @@ def get_temp_count(in_df,obs_per_hour,temp):
     hot_grp_df = hot_df[['year','hour']].groupby('year').count().reset_index()
     hot_grp_df.rename(columns={'hour':'obs_num'},inplace=True)
     hot_grp_df['hours'] = hot_grp_df['obs_num'] / obs_per_hour
-    hour_year_plot_func(hot_grp_df,temp)
+    if plot:
+        # plotting the number of hours above the threshold per year:
+        hour_year_plot_func(hot_grp_df,temp)
     # print(hot_grp_df)
     return hot_df,hot_grp_df
 
@@ -291,7 +293,7 @@ def hour_year_plot_func(nite_hot_grp_df,temp):
     pyplot.show()
 
 
-def load_nass_yld_func(fip,name):
+def load_nass_yld_func(fip,name,plot=True):
     """
     Returns crop yield data for a given FIPS code
     print out the yield chart
@@ -310,7 +312,9 @@ def load_nass_yld_func(fip,name):
                    (in_df['County ANSI'] == int(cnty_code)) &
                    (in_df['Year'] >= 2006)][['Year','Value']]
     out_df.rename(columns={'Year':'year'},inplace=True)
-    yld_chart_func(out_df,name)
+    if plot:
+        # plotting the crop yield data
+        yld_chart_func(out_df,name)
     return out_df
 
 
@@ -345,9 +349,9 @@ def geo_map_func(cnty_gdf,point_gdf,st_fip,fip,stn_id,stn_n,name):
     name (str): County Name.
     """
     fig, ax = pyplot.subplots()
-    cnty_gdf[cnty_gdf['STATEFP'] == st_fip].plot(ax=ax,color='green')
-    cnty_gdf[cnty_gdf['GEOID'] == fip].plot(ax=ax,color='yellow')
-    point_gdf.plot(ax=ax,color='blue')
+    cnty_gdf[cnty_gdf['STATEFP'] == st_fip].plot(ax=ax,color='#4682b4')
+    cnty_gdf[cnty_gdf['GEOID'] == fip].plot(ax=ax,color='#000080')
+    point_gdf.plot(ax=ax,color='#FF8000')
     ax.set_title("Station: {}\nLocation: {}\n{}".format(stn_id,stn_n,name))
     ax.set_ylabel('Longitude')
     ax.set_xlabel('Latitude')
