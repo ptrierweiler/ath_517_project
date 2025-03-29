@@ -73,7 +73,7 @@ def obs_per_hour_func(avg_cnt):
     return ds[np.array(list(ds.keys())).min()]
 
 
-def date_cln_func(stn_df,plot=True):
+def date_cln_func(stn_df, plot=True):
     """
     Returns cleaned Weather Station Dataframe date columns
     print out the number of observations per year chart
@@ -103,7 +103,6 @@ def date_cln_func(stn_df,plot=True):
     if plot:
         # plotting the number of observations per year
         obs_yr_plot(grp_df,stn_df.loc[0]['NAME'],stn_df.loc[0]['STATION'])
-        obs_yr_plot(grp_df,stn_df.loc[0]['NAME'],stn_df.loc[0]['STATION'])
     # counting mean obs per day
     stn_df['d'] = stn_df['DATE'].dt.date
     avg_cnt_day = stn_df[['d','STATION']].groupby('d').count().reset_index()['STATION'].mean()
@@ -112,7 +111,7 @@ def date_cln_func(stn_df,plot=True):
     return stn_df,obs_per_hour
 
 
-def temp_cln_fun(stn_df):
+def temp_cln_fun(stn_df,plot=True):
     """
     Returns cleaned Weather Station Dataframe temperature column and filter by QC flags
     print out the percentage of failed observations chart
@@ -129,14 +128,19 @@ def temp_cln_fun(stn_df):
     tot_obs = len(stn_df)
     err_obs = len(stn_df[~stn_df['qc_flag'].isin(qc_flags)])
     pct = round((err_obs/tot_obs)*100,3)
-    qc_hist_func(stn_df,tot_obs,err_obs)
+
     stn_df.drop(stn_df[~stn_df['qc_flag'].isin(qc_flags)].index,axis=0,inplace=True)
     stn_df['temp'] = stn_df['TMP'].str[0] + stn_df['TMP'].str[2:5].astype(int).astype(str)
     # dividing by 10 because the temp data is scaled by a factor 10
     stn_df['temp'] = stn_df['temp'].astype(int) / 10.0
-    temp_hist_func(stn_df)
+    if plot:
+        # plotting the distribution of quality control codes
+        qc_hist_func(stn_df,tot_obs,err_obs)
+        # plotting the temperature distribution
+        temp_hist_func(stn_df)
     print("Total Observations: {}\nFailed Observations: {}\nPercent Failed: {}".format(tot_obs,err_obs,pct))
     return stn_df
+
 
 def qc_hist_func(stn_df,tot_obs,err_obs):
     """
@@ -214,7 +218,7 @@ def get_temp_func(in_tmp):
     return(out_tmp)
 
 
-def night_time_func(stn_df,srt_date, end_date,srt_time, end_time):
+def night_time_func(stn_df,srt_date, end_date,srt_time, end_time,plot=True):
     """
     Returns filtered Weather Station Dataframe for night time temperatures
 
@@ -242,7 +246,9 @@ def night_time_func(stn_df,srt_date, end_date,srt_time, end_time):
         disp_df = pd.concat([disp_df,
                              pd.DataFrame({'year':[i],'start_doy':[srt_doy],
                                            'end_doy':[end_doy],'count':[len(tmp_df)]})])
-    temp_hist_func(out_df,'nite')
+    if plot:
+        # plotting the distribution of night time temperatures
+        temp_hist_func(out_df,'nite')
     return out_df,disp_df
 
 
