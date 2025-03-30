@@ -61,6 +61,10 @@ def obs_per_hour_func(avg_cnt):
     Parameters:
     avg_cnt (int): Average number of observations per hour.
 
+    Logic: 
+    Loop through dict of obs numbers per day and finds the closest value
+    Ex: 68 avg obs would be 72 per day 3 per hour
+
     Returns:
     int: Number of observations per hour.
     """
@@ -69,9 +73,11 @@ def obs_per_hour_func(avg_cnt):
     ds = {}
     for i in val_dict.keys():
         d = abs(avg_cnt - i)
-        print(d,val_dict[i])
+        # print(d,val_dict[i])
         ds.update({d:val_dict[i]})
-    return ds[np.array(list(ds.keys())).min()]
+    out_val = ds[np.array(list(ds.keys())).min()]
+    print("Avg Obs per hour: ",out_val)
+    return out_val
 
 
 def date_cln_func(stn_df, plot=True):
@@ -86,6 +92,7 @@ def date_cln_func(stn_df, plot=True):
     Returns:
     stn_df (DataFrame): Cleaned Weather Station Dataframe.
     obs_per_hour (int): Number of observations per hour.
+    grp_df (DataFrame): Grouped Weather Station Dataframe.
     """
     # clean in data
     # doing date preprocessing
@@ -108,11 +115,11 @@ def date_cln_func(stn_df, plot=True):
     stn_df['d'] = stn_df['DATE'].dt.date
     avg_cnt_day = stn_df[['d','STATION']].groupby('d').count().reset_index()['STATION'].mean()
     obs_per_hour = obs_per_hour_func(avg_cnt_day)
-    print(grp_df)
-    return stn_df,obs_per_hour
+    # print(grp_df)
+    return stn_df,obs_per_hour,grp_df
 
 
-def temp_cln_fun(stn_df,plot=True):
+def temp_cln_func(stn_df,plot=True):
     """
     Returns cleaned Weather Station Dataframe temperature column and filter by QC flags
     print out the percentage of failed observations chart
