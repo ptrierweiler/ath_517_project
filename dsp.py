@@ -398,13 +398,15 @@ def get_county_func(stn_df):
     return fip,[name,st]
 
 
-def regression_func(data_df, plot=True):
+def regression_func(data_df, cnty_name, temp, plot=True):
     """
     Returns regression model for nightime temperature and yield data
 
     Parameters:
     data_df (DataFrame): DataFrame containing temperature and yield data.
+    cnty_name (list): [County name, State abbr].  
     plot (bool): Plot regression line if True.
+    temp (int): Temperature threshold.
 
     Returns:
     model (LinearRegression): Linear regression model.
@@ -413,15 +415,17 @@ def regression_func(data_df, plot=True):
     X = np.array(data_df[['hours']]).reshape(-1, 1)
     y = np.array(data_df['Value']).reshape(-1, 1)
     reg = LinearRegression().fit(X,y)
-    r2 = reg.score(X,y)
+    r2 = round(reg.score(X,y),3)
     print("R2: ",r2)
     if plot == True:
         # plotting the regression line
-        pyplot.scatter(X,y)
-        pyplot.plot(X,reg.predict(X),color='red')
-        pyplot.title("Night Time Temperature vs Yield")
-        pyplot.xlabel('')
-        pyplot.ylabel('Yield')
+        sns.regplot(x=hr_yld_data['hours'],y=hr_yld_data['Value'])
+        title = title = "Night Time Temperatures >= {} \u00b0C vs Yield\n".format(temp) +\
+                "{}, {}\n".format(cnty_name[0],cnty_name[1]) +\
+                "R2: {}".format(r2)
+        pyplot.title(title)
+        pyplot.xlabel('Number of Hours')
+        pyplot.ylabel('Yield Bushels per Acre')
         pyplot.show()
 
 #def super_func(stn_id):
