@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 import os
-import urllib.request
 from matplotlib import pyplot
+import seaborn as sns
 import datetime
 import geopandas as gpd
 from shapely.geometry import Point
+from sklearn.linear_model import LinearRegression
 
 
 def load_func(stn,dwn=False):
@@ -138,7 +139,7 @@ def temp_cln_fun(stn_df,plot=True):
         qc_hist_func(stn_df,tot_obs,err_obs)
         # plotting the temperature distribution
         temp_hist_func(stn_df)
-    print("Total Observations: {}\nFailed Observations: {}\nPercent Failed: {}".format(tot_obs,err_obs,pct))
+    #print("Total Observations: {}\nFailed Observations: {}\nPercent Failed: {}".format(tot_obs,err_obs,pct))
     return stn_df
 
 
@@ -156,7 +157,8 @@ def qc_hist_func(stn_df,tot_obs,err_obs):
     pct = round((err_obs/tot_obs)*100,3)
     pyplot.hist(stn_df['qc_flag'])
     pyplot.title("Quality Code distribution for Station ID: {}\n".format(stat) +\
-                 "Location: {}\n".format(name))
+                 "Location: {}\n".format(name) +\
+                 "Total Observations: {}\nFailed Observations: {}\nPercent Failed: {}".format(tot_obs,err_obs,pct))
     pyplot.ylabel("Number of Observations")
     pyplot.xlabel("Quality Control Code")
     pyplot.show()
@@ -387,3 +389,32 @@ def get_county_func(stn_df):
     st_fip = cnty_df['STATEFP'].values[0]
     geo_map_func(cnty_gdf,point_gdf,st_fip,fip,stn_id,stn_n,name)
     return fip,[name,st]
+
+
+def regression_func(data_df, plot=True):
+    """
+    Returns regression model for nightime temperature and yield data
+
+    Parameters:
+    data_df (DataFrame): DataFrame containing temperature and yield data.
+    plot (bool): Plot regression line if True.
+
+    Returns:
+    model (LinearRegression): Linear regression model.
+    """
+    # doing regression analysis
+    X = np.array(data_df[['hours']]).reshape(-1, 1)
+    y = np.array(data_df['Value']).reshape(-1, 1)
+    reg = LinearRegression().fit(X,y)
+    r2 = reg.score(X,y)
+    print("R2: ",r2)
+    if plot == True:
+        # plotting the regression line
+        pyplot.scatter(X,y)
+        pyplot.plot(X,reg.predict(X),color='red')
+        pyplot.title("Night Time Temperature vs Yield")
+        pyplot.xlabel('')
+        pyplot.ylabel('Yield')
+        pyplot.show()
+
+#def super_func(stn_id):
