@@ -7,6 +7,9 @@ import datetime
 import geopandas as gpd
 from shapely.geometry import Point
 from sklearn.linear_model import LinearRegression
+from scipy import stats
+import statsmodels.api as sm
+import math
 
 
 def load_func(stn,dwn=False):
@@ -145,7 +148,9 @@ def temp_cln_func(stn_df,plot=True):
         # plotting the distribution of quality control codes
         qc_hist_func(stn_df,tot_obs,err_obs)
         # plotting the temperature distribution
-        temp_hist_func(stn_df)
+        temp_hist_func(stn_df,ttype='all')
+        # plotting the temperature distribution with gaussian pdf
+        temp_hist_func_pdf(stn_df,ttype='all')
     #print("Total Observations: {}\nFailed Observations: {}\nPercent Failed: {}".format(tot_obs,err_obs,pct))
     return stn_df
 
@@ -171,7 +176,7 @@ def qc_hist_func(stn_df,tot_obs,err_obs):
     pyplot.show()
 
 
-def temp_hist_func(stn_df,ttype='all'):
+def temp_hist_func(stn_df,ttype='all',ext_str=None):
     """
     Display Temperature histogram
     
@@ -182,14 +187,46 @@ def temp_hist_func(stn_df,ttype='all'):
     stat = stn_df[0:1]['STATION'].values[0]
     name = stn_df[0:1]['NAME'].values[0]
     pyplot.hist(stn_df['temp'])
-    tile_dict = {'all': "Temperture distribution for Station ID: {}\n".format(stat),
-                 'nite': "Night Time Temperture distribution for Station ID: {}\n".format(stat)}
-    pyplot.title(tile_dict[ttype] + "Location: {}\n".format(name))
+    tile_dict = {'all': "Temperture distribution for Station ID: {}\n".format(stat) +\
+                        "{}".format(name),
+                 'nite': "Night Time Temperture distribution for Station ID: {}\n".format(stat) +\
+                        "{}\n{}".format(name,ext_str)}
+    pyplot.title(tile_dict[ttype])
     # pyplot.title("Temperture distribution for Station ID: {}\n".format(stat) +\
     #              "Location: {}".format(name))
     pyplot.ylabel("Number of Observations")
     pyplot.xlabel("Temperture C°")
     pyplot.plot()
+
+
+def temp_hist_func_pdf(stn_df,ttype='all',ext_str=None):
+    # getting station name and location
+    stat = stn_df[0:1]['STATION'].values[0]
+    name = stn_df[0:1]['NAME'].values[0]
+    # calculating bins
+    bins = np.arange(math.floor(stn_df['temp'].min()), math.ceil(stn_df['temp'].max()))
+    # getting normal distribution parameters
+    mu, std=stats.norm.fit(stn_df['temp'])
+    # creating figure and axis
+    fig,ax = pyplot.subplots()
+    # title dict
+    tile_dict = {'all': "Temperture distribution for Station ID: {}\n".format(stat) +\
+                        "{}".format(name),
+                 'nite': "Night Time Temperture distribution for Station ID: {}\n".format(stat) +\
+                        "{}\n{}".format(name,ext_str)}
+    ax.set_title(tile_dict[ttype])
+    # Plotting histogram
+    ax.hist(stn_df['temp'],bins,label='Temperature')
+    # Plot the normal distribution with the parameters we estimated from our data 
+    x = np.linspace(stats.norm.ppf(0.01,mu,std),
+               stats.norm.ppf(0.99,mu,std), 100)
+    ax.plot(x, len(stn_df['temp'])*stats.norm.pdf(x,mu,std),
+          'k-', lw=5, alpha=0.6, label='gaussian pdf')
+
+    ax.set_ylabel("Number of Observations")
+    ax.set_xlabel("Temperture C°")
+    ax.legend()
+    ax.plot()
 
 
 def obs_yr_plot(grp_df,name,stat):
@@ -256,8 +293,12 @@ def night_time_func(stn_df,srt_date, end_date,srt_time, end_time,plot=True):
                              pd.DataFrame({'year':[i],'start_doy':[srt_doy],
                                            'end_doy':[end_doy],'count':[len(tmp_df)]})])
     if plot:
+        ext_str = "Start Date: {}, End Date: {},\n".format(srt_date,end_date) +\
+                   "Start Night Time: {}:00, End Night Time: {}:00".format(srt_time,end_time)
         # plotting the distribution of night time temperatures
-        temp_hist_func(out_df,'nite')
+        temp_hist_func(out_df,'nite',ext_str=ext_str)
+        # plotting the temperature distribution with gaussian pdf
+        temp_hist_func_pdf(out_df,ttype='nite',ext_str=ext_str)
     return out_df,disp_df
 
 
