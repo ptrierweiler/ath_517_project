@@ -408,7 +408,7 @@ def geo_map_func(cnty_gdf,point_gdf,st_fip,fip,stn_id,stn_n,name):
     pyplot.show()
 
 
-def get_county_func(stn_df):
+def get_county_func(stn_df,plot=True):
     """
     Returns county information for a given station
     print out the map of the county"
@@ -438,7 +438,8 @@ def get_county_func(stn_df):
     st = fip_cnty_df['STATE'].values[0]
     fip = cnty_df['GEOID'].values[0]
     st_fip = cnty_df['STATEFP'].values[0]
-    geo_map_func(cnty_gdf,point_gdf,st_fip,fip,stn_id,stn_n,name)
+    if plot:
+        geo_map_func(cnty_gdf,point_gdf,st_fip,fip,stn_id,stn_n,name)
     return fip,[name,st]
 
 
@@ -472,4 +473,11 @@ def regression_func(data_df, cnty_name, temp, plot=True):
         pyplot.ylabel('Yield Bushels per Acre')
         pyplot.show()
 
-#def super_func(stn_id):
+def super_func(stn_id):
+    # load station data
+    stn_df = load_func(stn_id)
+    # drop unneeded columns
+    stn_df = drop_func(stn_df)
+    # getting county information
+    get_county_func(stn_df)
+
