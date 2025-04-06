@@ -296,7 +296,7 @@ def night_time_func(stn_df,srt_date, end_date,srt_time, end_time,plot=True):
         ext_str = "Start Date: {}, End Date: {},\n".format(srt_date,end_date) +\
                    "Start Night Time: {}:00, End Night Time: {}:00".format(srt_time,end_time)
         # plotting the distribution of night time temperatures
-        temp_hist_func(out_df,'nite',ext_str=ext_str)
+        # temp_hist_func(out_df,'nite',ext_str=ext_str)
         # plotting the temperature distribution with gaussian pdf
         temp_hist_func_pdf(out_df,ttype='nite',ext_str=ext_str)
     return out_df,disp_df
