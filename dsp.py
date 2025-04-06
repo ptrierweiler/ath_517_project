@@ -443,7 +443,7 @@ def get_county_func(stn_df,plot=True):
     return fip,[name,st]
 
 
-def regression_func(data_df, cnty_name, temp, plot=True):
+def regression_func(data_df, cnty_name, temp, plot=True,save=False):
     """
     Returns regression model for nightime temperature and yield data
 
@@ -452,6 +452,9 @@ def regression_func(data_df, cnty_name, temp, plot=True):
     cnty_name (list): [County name, State abbr].  
     plot (bool): Plot regression line if True.
     temp (int): Temperature threshold.
+    plot (bool): Plots scatterplot with regression line if True.
+    save (bool): Save the plot if True.
+
 
     Returns:
     model (LinearRegression): Linear regression model.
@@ -471,13 +474,35 @@ def regression_func(data_df, cnty_name, temp, plot=True):
         pyplot.title(title)
         pyplot.xlabel('Number of Hours')
         pyplot.ylabel('Yield Bushels per Acre')
+        if save:
+            # save the figure
+            out_path = 'pdfs/{}_{}_{}.pdf'.format(cnty_name[0].replace('County','').strip()
+                                                  ,cnty_name[1],temp)
+            pyplot.savefig(out_path,format='pdf')
         pyplot.show()
 
-def super_func(stn_id):
+
+def super_func(stn_id,start_date,end_date,start_time,end_time,temp,plot=False):
     # load station data
     stn_df = load_func(stn_id)
     # drop unneeded columns
     stn_df = drop_func(stn_df)
     # getting county information
-    get_county_func(stn_df)
+    cnty_fip,cnty_name = get_county_func(stn_df,plot=plot)
+    # clean and format temperature data
+    stn_df = temp_cln_func(stn_df,plot=plot)
+    # clean and format date data
+    stn_df,obs_per_hour,grp_df = date_cln_func(stn_df,plot=plot)
+    # getting night time data
+    nite_df,disp_df = night_time_func(stn_df,start_date,end_date,
+                                      start_time,end_time,plot=plot)
+    # getting hot data
+    nite_hot_df, nite_hot_grp_df = get_temp_count(nite_df,obs_per_hour,temp,plot=plot)
+    # getting yield data
+    yld_df = load_nass_yld_func(cnty_fip,cnty_name,plot=plot)
+    # merging data
+    hr_yld_data = pd.merge(nite_hot_grp_df,yld_df,how='left',on='year').dropna()
+    # doing regression analysis
+    regression_func(hr_yld_data, cnty_name, temp, plot=True,save=True)
+
 
