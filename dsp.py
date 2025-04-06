@@ -463,7 +463,7 @@ def regression_func(data_df, cnty_name, temp, plot=True):
     print("R2: ",r2)
     if plot == True:
         # plotting the regression line
-        sns.regplot(x=hr_yld_data['hours'],y=hr_yld_data['Value'])
+        sns.regplot(x=data_df['hours'],y=data_df['Value'])
         title = title = "Night Time Temperatures >= {} \u00b0C vs Yield\n".format(temp) +\
                 "{}, {}\n".format(cnty_name[0],cnty_name[1]) +\
                 "R2: {}".format(r2)
