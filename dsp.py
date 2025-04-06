@@ -148,7 +148,7 @@ def temp_cln_func(stn_df,plot=True):
         # plotting the distribution of quality control codes
         qc_hist_func(stn_df,tot_obs,err_obs)
         # plotting the temperature distribution
-        temp_hist_func(stn_df,ttype='all')
+        # temp_hist_func(stn_df,ttype='all')
         # plotting the temperature distribution with gaussian pdf
         temp_hist_func_pdf(stn_df,ttype='all')
     #print("Total Observations: {}\nFailed Observations: {}\nPercent Failed: {}".format(tot_obs,err_obs,pct))
@@ -428,7 +428,10 @@ def get_county_func(stn_df):
     point = Point(lon, lat)
     point_gdf = gpd.GeoDataFrame({'geometry': [point]}, crs="EPSG:4326")
     cnty_df = gpd.sjoin(point_gdf,cnty_gdf)
-    fips_df = pd.read_csv('https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt',delimiter='|')
+    # reads from the internet
+    # fips_df = pd.read_csv('https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt',delimiter='|')
+    # reads locally
+    fips_df = pd.read_csv('national_county2020.txt',delimiter='|')
     fip_cnty_df = fips_df[(fips_df['STATEFP'] == int(cnty_df['STATEFP'].values[0])) &
                       (fips_df['COUNTYFP'] == int(cnty_df['COUNTYFP'].values[0]))]
     name = fip_cnty_df['COUNTYNAME'].values[0]
