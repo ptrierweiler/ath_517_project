@@ -199,6 +199,31 @@ def temp_hist_func(stn_df,ttype='all',ext_str=None):
     pyplot.plot()
 
 
+def temp_hist_func_hot(nite_hot_df,start_date,end_date,start_time,end_time,temp):
+    """
+    Display Temperature histogram for hot temperatures
+    
+    Parameters:
+    nite_hot_df (DataFrame): Weather Station Dataframe.
+    start_date (str): Start date (mm-dd).
+    end_date (str): End date (mm-dd).
+    start_time (int): Start time (24h).
+    end_time (int): End time (24h).
+    temp (int): Temperature threshold.
+    """
+    stat = nite_hot_df[0:1]['STATION'].values[0]
+    name = nite_hot_df[0:1]['NAME'].values[0]
+    pyplot.hist(nite_hot_df['temp'])
+    ext_str = "Start Date: {}, End Date: {},\n".format(start_date,end_date) +\
+              "Start Night Time: {}:00, End Night Time: {}:00".format(start_time,end_time)
+    pyplot.title("Hot temperature distribution for Station ID: {}\n".format(stat) +\
+                 "temperatures >= {}C°\n".format(temp) +\
+                 "{}\n{}".format(name,ext_str))
+    pyplot.ylabel("Number of Observations")
+    pyplot.xlabel("Temperture C°")
+    pyplot.plot()
+
+
 def temp_hist_func_pdf(stn_df,ttype='all',ext_str=None):
     # getting station name and location
     stat = stn_df[0:1]['STATION'].values[0]
@@ -227,7 +252,7 @@ def temp_hist_func_pdf(stn_df,ttype='all',ext_str=None):
     ax.set_xlabel("Temperture C°")
     ax.legend()
     ax.plot()
-
+    
 
 def obs_yr_plot(grp_df,name,stat):
     """
@@ -302,7 +327,7 @@ def night_time_func(stn_df,srt_date, end_date,srt_time, end_time,plot=True):
     return out_df,disp_df
 
 
-def get_temp_count(in_df,obs_per_hour,temp, plot=True):
+def get_temp_count(in_df,obs_per_hour,start_date,end_date,start_time,end_time,temp,plot=True):
     """
     Returns filtered Weather Station Dataframe for temperatures above a threshold
     print out the number of hours above the threshold per year chart
@@ -322,24 +347,37 @@ def get_temp_count(in_df,obs_per_hour,temp, plot=True):
     hot_grp_df['hours'] = hot_grp_df['obs_num'] / obs_per_hour
     if plot:
         # plotting the number of hours above the threshold per year:
-        hour_year_plot_func(hot_grp_df,temp)
+        stat = in_df['STATION'].unique()[0]
+        name = in_df['NAME'].unique()[0]
+        hour_year_plot_func(name,stat,hot_grp_df,start_date,end_date,start_time,end_time,temp)
+        temp_hist_func_hot(hot_df,start_date,end_date,start_time,end_time,temp)
     # print(hot_grp_df)
     return hot_df,hot_grp_df
 
 
-def hour_year_plot_func(nite_hot_grp_df,temp):
+def hour_year_plot_func(name,stat,nite_hot_grp_df,start_date,end_date,start_time,end_time,temp):
     """
     Display hours per year over a temperature threshold plot
     
     Parameters:
+    name (str): Weather Station Name.
+    stat (int): Weather Station ID.
     nite_hot_grp_df (DataFrame): Grouped Weather Station Dataframe.
+    start_date (str): Start date (mm-dd).
+    end_date (str): End date (mm-dd).
+    start_time (int): Start time (24h).
+    end_time (int): End time (24h).
     temp (int): Temperature threshold.
     """
     pyplot.plot(nite_hot_grp_df['year'],nite_hot_grp_df['hours'])
     pyplot.xticks(range(2007,2023,3))
-    pyplot.title("Hours per year over {} degrees".format(temp))
-    pyplot.xlabel('year')
-    pyplot.ylabel('hours')
+    ext_str = "Start Date: {}, End Date: {},\n".format(start_date,end_date) +\
+              "Start Night Time: {}:00, End Night Time: {}:00".format(start_time,end_time)
+    pyplot.title("Hours per year over with Temperatures >= {}C°\n".format(temp) +\
+                 "for Station ID: {}\n".format(stat) +\
+                 "{}\n{}".format(name,ext_str))
+    pyplot.xlabel('Year')
+    pyplot.ylabel('Hours')
     pyplot.show()
 
 
@@ -455,9 +493,8 @@ def regression_func(data_df, cnty_name, temp, plot=True,save=False):
     plot (bool): Plots scatterplot with regression line if True.
     save (bool): Save the plot if True.
 
-
     Returns:
-    model (LinearRegression): Linear regression model.
+    r2 (float): R-squared value of the regression model.
     """
     # doing regression analysis
     X = np.array(data_df[['hours']]).reshape(-1, 1)
@@ -480,9 +517,21 @@ def regression_func(data_df, cnty_name, temp, plot=True,save=False):
                                                   ,cnty_name[1],temp)
             pyplot.savefig(out_path,format='pdf')
         pyplot.show()
+    return r2
 
 
 def super_func(stn_id,start_date,end_date,start_time,end_time,temp,plot=False):
+    """
+    Main function to run the analysis
+    
+    Parameters:
+    stn_id (int): Weather Station ID code.
+    start_date (str): Start date (mm-dd).
+    end_date (str): End date (mm-dd).
+    start_time (int): Start time (24h).
+    end_time (int): End time (24h).
+    temp (int): Temperature threshold.
+    plot (bool): Plot results if True."""
     # load station data
     stn_df = load_func(stn_id)
     # drop unneeded columns
@@ -497,12 +546,12 @@ def super_func(stn_id,start_date,end_date,start_time,end_time,temp,plot=False):
     nite_df,disp_df = night_time_func(stn_df,start_date,end_date,
                                       start_time,end_time,plot=plot)
     # getting hot data
-    nite_hot_df, nite_hot_grp_df = get_temp_count(nite_df,obs_per_hour,temp,plot=plot)
+    nite_hot_df, nite_hot_grp_df = get_temp_count(nite_df,obs_per_hour,start_date,end_date,start_time,end_time,temp,plot=plot)
     # getting yield data
     yld_df = load_nass_yld_func(cnty_fip,cnty_name,plot=plot)
     # merging data
     hr_yld_data = pd.merge(nite_hot_grp_df,yld_df,how='left',on='year').dropna()
     # doing regression analysis
-    regression_func(hr_yld_data, cnty_name, temp, plot=True,save=True)
+    r2 = regression_func(hr_yld_data, cnty_name, temp, plot=True,save=True)
 
 
