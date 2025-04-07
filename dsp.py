@@ -504,8 +504,11 @@ def regression_func(data_df, cnty_name, temp, plot=True,save=False):
     print("R2: ",r2)
     if plot == True:
         # plotting the regression line
-        sns.regplot(x=data_df['hours'],y=data_df['Value'])
-        title = title = "Night Time Temperatures >= {} \u00b0C vs Yield\n".format(temp) +\
+        fig, ax = pyplot.subplots()
+        sns.regplot(x=data_df['hours'],y=data_df['Value'],ax=ax,label='Regression Line')
+        data_df[data_df['year'] == 2012].plot.scatter(x='hours',y='Value',color='red',
+                                                      label='Year: 2012',s=25,ax=ax)
+        title = "Night Time Temperatures >= {} \u00b0C vs Yield\n".format(temp) +\
                 "{}, {}\n".format(cnty_name[0],cnty_name[1]) +\
                 "R2: {}".format(r2)
         pyplot.title(title)
