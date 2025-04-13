@@ -481,7 +481,7 @@ def get_county_func(stn_df,plot=True):
     return fip,[name,st]
 
 
-def regression_func(data_df, cnty_name, temp, plot=True,save=False):
+def regression_func(data_df, cnty_name, temp, elev, plot=True,save=False):
     """
     Returns regression model for nightime temperature and yield data
 
@@ -490,6 +490,7 @@ def regression_func(data_df, cnty_name, temp, plot=True,save=False):
     cnty_name (list): [County name, State abbr].  
     plot (bool): Plot regression line if True.
     temp (int): Temperature threshold.
+    elev (float): Elevation of the weather station.
     plot (bool): Plots scatterplot with regression line if True.
     save (bool): Save the plot if True.
 
@@ -510,6 +511,7 @@ def regression_func(data_df, cnty_name, temp, plot=True,save=False):
                                                       label='Year: 2012',s=25,ax=ax)
         title = "Night Time Temperatures >= {} \u00b0C vs Yield\n".format(temp) +\
                 "{}, {}\n".format(cnty_name[0],cnty_name[1]) +\
+                "Elevation {} meters\n".format(elev) +\
                 "R2: {}".format(r2)
         pyplot.title(title)
         pyplot.xlabel('Number of Hours')
@@ -555,6 +557,8 @@ def super_func(stn_id,start_date,end_date,start_time,end_time,temp,plot=False):
     # merging data
     hr_yld_data = pd.merge(nite_hot_grp_df,yld_df,how='left',on='year').dropna()
     # doing regression analysis
-    r2 = regression_func(hr_yld_data, cnty_name, temp, plot=True,save=True)
+    elev = nite_hot_df['ELEVATION'].unique()[0]
+    r2 = regression_func(hr_yld_data,cnty_name,temp,elev,plot=True,save=True)
+    return stn_id,r2,elev
 
 
