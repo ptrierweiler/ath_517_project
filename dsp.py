@@ -415,7 +415,13 @@ def yld_chart_func(df,name):
     name (str): County name.
     """
     # print(df)
-    pyplot.plot(df['year'],df['Value'])
+    # getting trend yield line
+    X = np.array(df[['year']]).reshape(-1, 1)
+    y = np.array(df['Value']).reshape(-1, 1)
+    reg = LinearRegression().fit(X,y)
+    pyplot.plot(df['year'],df['Value'], label='USDA Crop Yield')
+    pyplot.plot(df['year'],reg.predict(X), label='Trend Yield')
+    pyplot.legend()
     pyplot.xticks(range(2007,2023,3))
     pyplot.title("Yield for {} Country, {}".format(name[0],name[1]))
     pyplot.xlabel('Year')
